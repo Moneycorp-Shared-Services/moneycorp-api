@@ -1,0 +1,5056 @@
+{
+	"info": {
+		"_postman_id": "a9877e49-ff21-4bad-b588-5fdd3d5dd0bc",
+		"name": "Moneycorp API",
+		"description": "# Introduction\n\nWelcome to the Moneycorp API.\n\nOur API provides you with the ability to construct business solutions, including foreign exchange, repeat or one-off, domestic or cross-border multi-currency payments. With it you can manage your accounts for receiving funds, exchange in up to 34 currencies with live market rates aggregated from 14 partner banks and make payments globally with our payment network, supported by systems that pre-validate your recipients, reducing the risk of payment failures or delays in processing.\n\nWe recommend you read through the API documentation in full to familiarise yourself with the features and workflows associated with the product. Demo accounts and sandbox access can be provisioned for you by your Moneycorp representative.\n\n# Overview\n\nBelow is a brief description of each of our API endpoints:\n\n**Login:**  \nBefore using the API, you must first obtain an authentication token by specifying the Login ID and API Key provided to you directly. This bearer token must be present in the Authorisation HTTP header when making all other API calls.\n\n**Accounts:**  \nUsed to manage your accounts, all objects created in our API are done in the context of an account, these endpoints allow you to look up and locate the relevant account to use for subsequent calls.\n\n**Balances:**  \nUsed to view the balances of your Moneycorp receiving accounts, split into each of the currencies supported by the Moneycorp API.\n\n**Recipients:**  \nOur recipients endpoints allows you to create, validate and retrieve your recipients for subsequent payments. We use our in house solution to ensure data is validated prior to payment submission to ensure delivery of funds and avoid any delays in processing.\n\n**Payments:**  \nOur payments endpoints are designed to allow you create payments to nearly every country in the world using a range of local and direct clearing methods. You can use these endpoints to search for previously sent payments, check payment status or create new payments.\n\n**Reference:**  \nOur reference endpoints are designed to provide you with all the information you should need to make full use of our other endpoints, such as obtaining recipient requirements, payment holidays and supported countries and currencies.\n\n# Getting Started\n\nAn example workflow is set out below for guidance on how the Moneycorp API operates in practice.\n\nIn this example, we want to make a £100,000 GBP payment to a recipient based in the UK.\n\n**1\\. Log in to the API:**  \nTo begin you will need to obtain an access token to allow you to reach all other API endpoints. Supply your unique Login ID and API Key to the login endpoint. On success, an access token will be granted.\n\n**2\\. Get your account details:**  \nNext you should retrieve all your accounts associated with your API user so when you move into creating payments they are done under the relevant account, most endpoints will also require an Account ID.\n\n**3\\. Check recipient field requirements:**  \nNext you may want to set up some recipients to send payments to, you can use our get recipient requirements endpoint to understand what information you must provide for a recipient for a given country/currency combination. For this example, we want to know what the requirements are for a recipient in the UK and a GBP account.\n\n**4\\. Create a recipient:**  \nNow you have the required information for creating a recipient you can perform this action using our create recipient endpoint, we will also validate the details provided to avoid any delays in processing of payments.\n\n**5\\. Create a payment:**  \nOnce the recipient has been created you can now create a payment for it using the returned recipient ID and passing it into the create payment endpoint.\n\n**6\\. Check your balance:**  \nPayments will only be released once there is sufficient funds available on your account balance, you can do this by paying directly into your Moneycorp account. You can pay into your Moneycorp account using your account reference found on the get account endpoint. Then you can use the get balances endpoint to check your account balance.\n\n**7\\. Check your Payment's status:**  \nFollowing a successful payment creation, updates on the status of the payment can be returned from the get payment endpoint.\n\n# Idempotency\n\nMoneycorp API utilises Idempotency across all create endpoints in order to prevent duplicate creation of resources.\n\nIdempotency in the Moneycorp API allows a user to safely retry a particular request, without the potentially unintended consequences of performing an operation multiple times. This is required for the situation when a response message is not received for a create request (e.g. creating a payment). In this situation a client would be unaware whether the original request was processed and the response was lost in transit, or if the request was never received at all. In the case where the original request was processed, subsequent retries of the request should not create duplicate resources or cause duplicate payments.\n\nTo perform an Idempotent request you must provide an `Idempotency-Key`: HTTP header when sending the request. The key is a unique value that is generated by the client to identify a particular request. This key can be any format, however, we recommend using a GUID in order to reduce the chance of idempotency key collisions. Keys expire after 15 minutes and requests are processed as usual if a key is re-used after that time.\n\nIf a request is received with a previously processed key one of three things will happen.\n\n- If the previous request is still being processed a Conflict (HttpStatus code 409) error will be generated.\n    \n- If the previous request was not successful the API will attempt to re-process the request.\n    \n- If the previous request was successful a Conflict (HttpStatus code 409) error will be generated. In addition the previous successful response will be included in the error payload.\n    \n\n**GET** requests are intrinsically Idempotent, so providing the Idempotency-Key header is not necessary.\n\n# Support\n\nContact your Moneycorp representative for further assistance.\n\n**Important Notice:**  \nThe API sandbox is a test environment that will mimic the characteristics of the production environment. In the test environment, you represent and warrant not to use real data (including personal data and account numbers) under any circumstances.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44324089"		
+	},
+	"item": [
+		{
+			"name": "login",
+			"item": [
+				{
+					"name": "Request Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();",
+									"pm.environment.set(\"TOKEN\", jsonData.data.accessToken);",
+									"",
+									"pm.expect(pm.response.code).to.equal(200);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"loginId\": \"{{LOGINID}}\",\n\t\"apiKey\": \"{{APIKEY}}\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/login",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "This endpoint will provide you with an access token that can be used for subsequent calls. To obtain your login ID and private API key contact your moneycorp account manager."
+					},
+					"response": []
+				},
+				{
+					"name": "Request Token with Scope",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody)",
+									"postman.setEnvironmentVariable(\"TOKEN\", jsonData.data.accessToken);",
+									"",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"loginId\": \"{{LOGINID}}\",\n\t\"apiKey\": \"{{APIKEY}}\",\n    \"scope\": \"test_scope\"\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/login",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "This endpoint will provide you with an access token that can be used for subsequent calls. To obtain your login ID and private API key contact your moneycorp account manager."
+					},
+					"response": []
+				}
+			],
+			"description": "Obtain an access token by supplying a username and API access key"
+		},
+		{
+			"name": "accounts",
+			"item": [
+				{
+					"name": "Get all accounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts?page[number]=0&page[size]=1&sortBy=accountName.asc",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "0"
+								},
+								{
+									"key": "page[size]",
+									"value": "1"
+								},
+								{
+									"key": "sortBy",
+									"value": "accountName.asc"
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:id",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{id}}"
+								}
+							]
+						},
+						"description": "This endpoint will get the account details for a specified Account ID. You are only allowed to view Accounts associated to your User."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single Direct Debit mandate",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:id/directDebit/mandate/:mandateId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":id",
+								"directDebit",
+								"mandate",
+								":mandateId"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "mandateId",
+									"value": "{{mandateId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get the account details for a specified Account ID. You are only allowed to view Accounts associated to your User."
+					},
+					"response": []
+				},
+				{
+					"name": "Get all Direct Debit mandates per account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:id/directDebit/mandates",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":id",
+								"directDebit",
+								"mandates"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get the account details for a specified Account ID. You are only allowed to view Accounts associated to your User."
+					},
+					"response": []
+				},
+				{
+					"name": "Create child (sub) account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"childAccountName\": \"John Smith\",\r\n      \"externalAccountReference\": \"SomeReference123\"\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						},
+						"description": "This endpoint will get the account details for a specified Account ID. You are only allowed to view Accounts associated to your User."
+					},
+					"response": []
+				},
+				{
+					"name": "Find accounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"findAccounts\",\r\n    \"attributes\": {\r\n      \"accountName\": \"John Smith\",\r\n      \"parentAccountId\": \"654321\",\r\n      \"addressLine1\": \"Flat 7\",\r\n      \"addressLine2\": \"Lancaster Lodge\",\r\n      \"addressLine3\": \"83-85 Lancaster Road\",\r\n      \"city\": \"London\",\r\n      \"stateProvince\": \"Greater London\",\r\n      \"postZipCode\": \"W111QH\",\r\n      \"country\": \"United Kingdom\",\r\n      \"accountReference\": \"CK0000111122KC\",\r\n      \"accountIban\": \"GI76MOYP000001800146142\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/find",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								"find"
+							]
+						},
+						"description": "This endpoint will find all the Accounts associated to your user and their details. This list can be filtered using a number of optional fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Create child (sub) account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"childAccountName\": \"John Smith\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts"
+							]
+						},
+						"description": "This endpoint will find all the Accounts associated to your user and their details. This list can be filtered using a number of optional fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Accounts file upload",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "Document",
+									"type": "file",
+									"src": "/C:/Users/dpetrova/OneDrive - ENDAVA/Desktop/MC/korero/test/Korero.EndToEnd.Tests/Resources/automationValidFile.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{URL}}/accounts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts"
+							]
+						},
+						"description": "This endpoint will find all the Accounts associated to your user and their details. This list can be filtered using a number of optional fields."
+					},
+					"response": []
+				}
+			],
+			"description": "Account endpoints"
+		},
+		{
+			"name": "contacts",
+			"item": [
+				{
+					"name": "Get all contacts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/contacts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								"contacts"
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get all contacts for account ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/contacts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"contacts"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": ""
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single contact by contact ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/contacts/:contactId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"contacts",
+								":contactId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "contactId",
+									"value": "{{contactId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a contact",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"firstName\": \"Jack\",\r\n      \"lastName\": \"Smith\",\r\n      \"emailAddress\": \"Jack.Smith@MyDomain.com\",\r\n      \"dateOfBirth\": \"2025-03-06T08:15:53.864Z\",\r\n      \"phoneNumber\": \"string\",\r\n      \"addressLine1\": \"123 Evergreen Terrace\",\r\n      \"addressLine2\": \"Flat 262\",\r\n      \"addressCity\": \"London\",\r\n      \"addressState\": \"AL\",\r\n      \"addressPostCode\": \"RM12 9HJ\",\r\n      \"addressCountry\": \"US\",\r\n      \"passportNumber\": \"612876\",\r\n      \"passportCountry\": \"string\",\r\n      \"passportExpiryDate\": \"2025-03-06T08:15:53.864Z\"\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/contacts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"contacts"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate a contact",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/contacts/:id",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"contacts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": ""
+								},
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				}
+			],
+			"description": "Contacts endpoints"
+		},
+		{
+			"name": "balances",
+			"item": [
+				{
+					"name": "Get balances for an account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/balances?AmountFrom={{AmountFrom}}&AmountTo={{AmountTo}}&projectd=true",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"balances"
+							],
+							"query": [
+								{
+									"key": "AmountFrom",
+									"value": "{{AmountFrom}}"
+								},
+								{
+									"key": "AmountTo",
+									"value": "{{AmountTo}}"
+								},
+								{
+									"key": "projectd",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return all the balances for a given Acccount. By default accounts are setup with balances in GBP, EUR and USD. Other currencies are added as payments or exchanges are made or funds are directly deposited."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single balance",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/balances/:balanceId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"balances",
+								":balanceId"
+							],
+							"query": [
+								{
+									"key": "projected",
+									"value": "true",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "balanceId",
+									"value": "{{balanceId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get the balance for a particular currency for the specified account."
+					},
+					"response": []
+				},
+				{
+					"name": "Add funds via Direct Debit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"mandateId\": {{mandateId}},\r\n      \"amount\": 100\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/balances/addFunds",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"balances",
+								"addFunds"
+							],
+							"query": [
+								{
+									"key": "projected",
+									"value": "true",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get the balance for a particular currency for the specified account."
+					},
+					"response": []
+				},
+				{
+					"name": "Add charge to an account or sub-account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"amount\": 100,\r\n      \"currency\": \"EUR\",\r\n      \"associatedPaymentId\": 456456,\r\n      \"chargeReference\": \"Ref123\"\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/balances/addCharge",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"balances",
+								"addCharge"
+							],
+							"query": [
+								{
+									"key": "projected",
+									"value": "true",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get the balance for a particular currency for the specified account."
+					},
+					"response": []
+				}
+			],
+			"description": "Balance endpoints"
+		},
+		{
+			"name": "payments",
+			"item": [
+				{
+					"name": "Get all payments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments?sortBy={{sortBy}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the payments associated to a specified Account Id and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single payment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments/:paymentId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments",
+								":paymentId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "paymentId",
+									"value": "{{paymentId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get proof of payment document type by payment ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments/:paymentId/document/:documentType",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments",
+								":paymentId",
+								"document",
+								":documentType"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "paymentId",
+									"value": "{{paymentId}}"
+								},
+								{
+									"key": "documentType",
+									"value": "1"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a payment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"createPayment\",\r\n    \"attributes\": {\r\n      \"recipientId\": \"{{recipientId}}\",\r\n      \"paymentDate\": \"2025-03-20\",\r\n      \"paymentAmount\": \"100.00\",\r\n      \"paymentCurrency\": \"GBP\",\r\n      \"paymentMethod\": \"Priority\",\r\n      \"paymentReference\": \"payref\",\r\n      \"clientReference\": \"clientref\",\r\n      \"batchReference\": \"batchref\"//,\r\n      //\"ultimatePayerName\": \"TTT Moneycorp Ltd\",\r\n     // \"ultimatePayerAddress1\": \"Flat 7\",\r\n     // \"ultimatePayerAddress2\": \"Lancaster Lodge\",\r\n      //\"ultimatePayerAddress3\": \"83-85 Lancaster Road\",\r\n      //\"ultimatePayerCountry\": \"GB\",\r\n      //\"ultimatePayerAccount\": \"123456\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will create an individual payment. In order to create a payment you must first have created a recipient using the Create recipient endpoint and then include the recipient Id in the create payment request body."
+					},
+					"response": []
+				},
+				{
+					"name": "Find payments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"findPayment\",\r\n    \"attributes\": {\r\n      \"paymentDateFrom\": \"2018-10-10\",\r\n      \"paymentDateTo\": \"2025-10-10\",\r\n      \"createdAtFrom\": \"2018-04-03T09:53:49.727Z\",\r\n      \"createdAtTo\": \"2025-04-04T09:53:49.727Z\",\r\n      \"createdBy\": \"Test User\",\r\n      \"updatedDateFrom\": \"2018-04-03T09:53:49.727Z\",\r\n      \"updatedDateTo\": \"2025-04-04T09:53:49.727Z\",\r\n      \"recipientId\": \"{{recipientId}}\",\r\n      \"bankAccountName\": \"Test User\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"342011\",\r\n      \"accountNumber\": \"03679985\",\r\n      \"swiftBicCode\": \"HKBAAU2SSYD\",\r\n      \"iban\": \"GB23MIDL40051539622031\",\r\n      \"bankName\": \"HSBC BANK PLC\",\r\n      \"paymentAmountFrom\": \"1.00\",\r\n      \"paymentAmountTo\": \"112.00\",\r\n      \"paymentCurrency\": \"GBP\",\r\n      \"paymentMethod\": \"Priority\",\r\n      \"paymentReference\": \"payref\",\r\n      \"clientReference\": \"clientref\",\r\n      \"batchReference\": \"batchref\",\r\n      \"supportingDocumentsRequired\": \"True\",\r\n      \"paymentStatus\": \"Cleared\",\r\n      \"paymentApproved\": \"True\",\r\n      \"recipientReference\": \"recipientref\",\r\n      \"recipientTemplateReference\": \"recipienttemplateref\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments/find?sortBy={{sortBy}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments",
+								"find"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will find all the payments associated to a specified Account Id and their details using a number of optional fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel payments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments/:paymentId/cancel",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments",
+								":paymentId",
+								"cancel"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "paymentId",
+									"value": "{{paymentId}}"
+								}
+							]
+						},
+						"description": "This endpoint will find all the payments associated to a specified Account Id and their details using a number of optional fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a payment association between existing payment and detail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"paymentId\": 123456,\r\n      \"dealId\": 345678\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId//paymentsassociation",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"",
+								"paymentsassociation"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will find all the payments associated to a specified Account Id and their details using a number of optional fields."
+					},
+					"response": []
+				},
+				{
+					"name": "File upload",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "Document",
+									"type": "file",
+									"src": "/C:/Users/dpetrova/OneDrive - ENDAVA/Desktop/MC/korero/test/Korero.EndToEnd.Tests/Resources/automationValidFile.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/payments/:paymentId/fileUpload",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"payments",
+								":paymentId",
+								"fileUpload"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "paymentId",
+									"value": "{{paymentId}}"
+								}
+							]
+						},
+						"description": "This endpoint will find all the payments associated to a specified Account Id and their details using a number of optional fields."
+					},
+					"response": []
+				}
+			],
+			"description": "Payments endpoints"
+		},
+		{
+			"name": "received payments",
+			"item": [
+				{
+					"name": "Get all received payments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/receivedPayments",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"receivedPayments"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[szie]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Find received payments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"paymentAmountFrom\": 1,\r\n      \"paymentAmountTo\": 1120,\r\n      \"currency\": \"GBP\",\r\n      //\"paymentType\": \"MarketingIncentive\",\r\n      \"paymentDateFrom\": \"2018-10-09T00:00:00.0000000\",\r\n      \"paymentDateTo\": \"2025-10-10T00:00:00.0000000\",\r\n      \"createdAtFrom\": \"2018-04-03T00:00:00.0000000\",\r\n      \"createdAtTo\": \"2025-04-04T00:00:00.0000000\"\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/receivedPayments/find?sortBy={{sortBy}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"receivedPayments",
+								"find"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single received payment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/receivedPayments/:paymentId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"receivedPayments",
+								":paymentId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "paymentId",
+									"value": "{{paymentId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the Accounts associated to your user and their details."
+					},
+					"response": []
+				}
+			],
+			"description": "Received payments endpoints"
+		},
+		{
+			"name": "recipients",
+			"item": [
+				{
+					"name": "Get all recipients",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the recipients associated to a specified Account Id and their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single recipient",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual recipient, this includes the recipient's bank account details and associated details for receiving of a payment. Requires you to know the recipient ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a recipient V2",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"ruleSetId\": 285,\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GB\",\r\n      \"accountHolderType\": \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will create an individual recipient, associated to a specific Account Id. This recipient can then be used to create a payment against using the Create Payment endpoint. Recipient details are validated prior to creation, any errors will be returned back with a description of any problems found during validation. To see what fields are required for a given recipient country/currency combination use the Get Recipient Requirements endpoint."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a recipient V1",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v1"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GB\",\r\n      \"accountHolderType\": \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will create an individual recipient, associated to a specific Account Id. This recipient can then be used to create a payment against using the Create Payment endpoint. Recipient details are validated prior to creation, any errors will be returned back with a description of any problems found during validation. To see what fields are required for a given recipient country/currency combination use the Get Recipient Requirements endpoint."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate a recipient V2",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"createRecipient\",\r\n    \"attributes\": {\r\n      \"ruleSetId\": 285,\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      //\"subAccount\": \"001\",\r\n      //\"swiftBicCode\": \"HKBAAU2SSYD\",\r\n      //\"iban\": \"GB23MIDL40051539622031\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GR\",\r\n      \"intermediarySwiftBicCode\": \"HKBAAU2SSYD\",\r\n     // \"intermediaryIban\": \"GB23MIDL40051539622031\",\r\n      \"intermediaryAccountNumber\": \"03679985\",\r\n      \"intermediaryBranchCode\": \"061000104\",\r\n      \"recipientReference\": \"Test payment 123\",\r\n      \"accountHolderType\" : \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/validate",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								"validate"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will validate an individual recipient, associated to a specific Account Id. AllowPartialMatchCreation flag is not taken into account."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate a recipient V1",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v1"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"createRecipient\",\r\n    \"attributes\": {\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      //\"subAccount\": \"001\",\r\n      //\"swiftBicCode\": \"HKBAAU2SSYD\",\r\n      //\"iban\": \"GB23MIDL40051539622031\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GR\",\r\n      \"intermediarySwiftBicCode\": \"HKBAAU2SSYD\",\r\n     // \"intermediaryIban\": \"GB23MIDL40051539622031\",\r\n      \"intermediaryAccountNumber\": \"03679985\",\r\n      \"intermediaryBranchCode\": \"061000104\",\r\n      \"recipientReference\": \"Test payment 123\",\r\n      \"accountHolderType\" : \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/validate",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								"validate"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will validate an individual recipient, associated to a specific Account Id. AllowPartialMatchCreation flag is not taken into account."
+					},
+					"response": []
+				},
+				{
+					"name": "Update recipient information",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"updateRecipient\",\r\n    \"attributes\": {\r\n            \"RecipientStreet\": \"Test\",\r\n            \"RecipientStateOrProvince\": \"Essex\",\r\n            \"RecipientZipPostCode\": \"IG39TB\",\r\n            \"RecipientCity\": \"Test\",\r\n            \"RecipientCountry\": \"GBR\",\r\n            \"ContactName\": \"\",\r\n            \"ContactEmail\": \"\",\r\n            \"ContactPhoneNumber\": \"\",\r\n            \"TemplateReference\": \"1-templateReference001\",\r\n            \"ContactNotes\": \"egg\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/information",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"information"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will update an individual recipient's details, associated to a specific Account Id. This endpoint is used to update a recipient's contact, address and personal details.\n\nN.B. It cannot be used to update a recipient's banking details."
+					},
+					"response": []
+				},
+				{
+					"name": "Update recipient's intermediary payment details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json;v2",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"intermediarySwiftBicCode\": \"string\",\r\n      \"intermediaryIban\": \"FI3819431124855509\",\r\n      \"intermediaryAccountNumber\": \"19431124855509\",\r\n      \"intermediaryBranchCode\": \"30-96-31\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/intermediary",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"intermediary"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will update an individual recipient's intermediary details, associated to a specific Account Id. This endpoint is used to update a recipient's intermediary banking details.\n\nN.B. It cannot be used to update a recipient's primary banking details or address details."
+					},
+					"response": []
+				},
+				{
+					"name": "Find recipients",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GB\",\r\n      \"accountHolderType\": \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/find",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								"find"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will find all the recipients associated to a specified Account Id and their details using a number of optional fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a recipient",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"ruleSetId\": 285,\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GB\",\r\n      \"accountHolderType\": \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will delete a recipient. You will be unable to make anymore payments to this recipient after a successful deletion."
+					},
+					"response": []
+				},
+				{
+					"name": "Recipient file upload",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "Document",
+									"type": "file",
+									"src": "/C:/Users/dpetrova/OneDrive - ENDAVA/Desktop/MC/korero/test/Korero.EndToEnd.Tests/Resources/automationValidFile.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/fileUpload",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"fileUpload"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will create an individual recipient, associated to a specific Account Id. This recipient can then be used to create a payment against using the Create Payment endpoint. Recipient details are validated prior to creation, any errors will be returned back with a description of any problems found during validation. To see what fields are required for a given recipient country/currency combination use the Get Recipient Requirements endpoint."
+					},
+					"response": []
+				},
+				{
+					"name": "Get proof of payment email associations for recipient",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/popEmailAssociations",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"popEmailAssociations"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual recipient's proof of payment (POP) email."
+					},
+					"response": []
+				},
+				{
+					"name": "Append proof of payment email associations to recipient",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"emailAssociationsToAppend\": [\r\n        \"{{emailAssociation}}\"\r\n      ]\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/popEmailAssociations",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"popEmailAssociations"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will append one or more items to the existing set of recipient's proof of payment (POP) email"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete single proof of payment email association from recipient",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"ruleSetId\": 285,\r\n      \"bankAccountName\": \"TTT Moneycorp Ltd\",\r\n      \"bankAccountCurrency\": \"GBP\",\r\n      \"bankAccountCountry\": \"GB\",\r\n      \"branchCode\": \"600001\",\r\n      \"accountNumber\": \"00800732\",\r\n      \"recipientStreet\": \"123 Test Street\",\r\n      \"recipientCity\": \"London\",\r\n      \"recipientStateOrProvince\": \"London\",\r\n      \"recipientZipPostCode\": \"W11ABC\",\r\n      \"recipientCountry\": \"GB\",\r\n      \"accountHolderType\": \"Corporate\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/popEmailAssociations/:emailAssociation",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"popEmailAssociations",
+								":emailAssociation"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								},
+								{
+									"key": "emailAssociation",
+									"value": "{{emailAssociation}}"
+								}
+							]
+						},
+						"description": "This endpoint will delete the given item from the existing set of recipient's proof of payment (POP) email."
+					},
+					"response": []
+				},
+				{
+					"name": "Setup a mandate for a recipient",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();\r",
+									"pm.environment.set(\"mandateId\", jsonData.data.attributes.mandateId);\r",
+									"\r",
+									"pm.expect(pm.response.code).to.equal(200);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/recipients/:recipientId/directDebit/mandate",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"recipients",
+								":recipientId",
+								"directDebit",
+								"mandate"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "recipientId",
+									"value": "{{recipientId}}"
+								}
+							]
+						},
+						"description": "This endpoint will setup an individual recipient as a Direct Debit mandate. Requires you to know the recipient."
+					},
+					"response": []
+				}
+			],
+			"description": "Recipients endpoints"
+		},
+		{
+			"name": "exchanges",
+			"item": [
+				{
+					"name": "Get a single exchange",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges/:exchnageId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges",
+								":exchnageId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "exchnageId",
+									"value": "{{exchangeId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get unsupported exchange dates",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges/unsupportedDates?currencyCode1=GBP&currencyCode2=GBP",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges",
+								"unsupportedDates"
+							],
+							"query": [
+								{
+									"key": "currencyCode1",
+									"value": "GBP"
+								},
+								{
+									"key": "currencyCode2",
+									"value": "GBP"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a spot quote",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges/quote?baseCurrency=GBP&termsCurrency=EUR&baseIsDealt=true&amount=2&paymentMethod=1",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges",
+								"quote"
+							],
+							"query": [
+								{
+									"key": "baseCurrency",
+									"value": "GBP"
+								},
+								{
+									"key": "termsCurrency",
+									"value": "EUR"
+								},
+								{
+									"key": "baseIsDealt",
+									"value": "true"
+								},
+								{
+									"key": "baseIsSell",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "amount",
+									"value": "2"
+								},
+								{
+									"key": "paymentMethod",
+									"value": "1"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a spot exchange",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"quote\": {\r\n            \"id\": \"6e0ee83c-c79a-44e8-8f9e-cbef734cadfa\",\r\n            \"rate\": 1.2051,\r\n            \"baseCurrency\": \"GBP\",\r\n            \"termsCurrency\": \"EUR\",\r\n            \"buyCurrency\": \"GBP\",\r\n            \"sellCurrency\": \"EUR\",\r\n            \"buyAmount\": 2.00,\r\n            \"sellAmount\": 2.41,\r\n            \"baseIsDealt\": true,\r\n            \"baseIsSell\": false,\r\n            \"valueDate\": \"2025-03-06T00:00:00\",\r\n            \"hmac\": \"SGe1ji7uDyI7FMeND6IAKIQVAmjE4ZU5KzjqPLkAT64=\",\r\n            \"expiryDate\": 1741269876282,\r\n            \"paymentMethod\": 1,\r\n            \"timestamp\": 1741269276282\r\n      },\r\n      \"reasonForTradeId\": \"34\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a forward quote",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges/forwards/quote?baseCurrency=GBP&termsCurrency=EUR&baseIsDealt=true&amount=3&valueDate=2025-03-14&depositCurrency=GBP&paymentMethod=1",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges",
+								"forwards",
+								"quote"
+							],
+							"query": [
+								{
+									"key": "baseCurrency",
+									"value": "GBP"
+								},
+								{
+									"key": "termsCurrency",
+									"value": "EUR"
+								},
+								{
+									"key": "baseIsDealt",
+									"value": "true"
+								},
+								{
+									"key": "baseIsSell",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "amount",
+									"value": "3"
+								},
+								{
+									"key": "valueDate",
+									"value": "2025-03-14"
+								},
+								{
+									"key": "depositCurrency",
+									"value": "GBP"
+								},
+								{
+									"key": "paymentMethod",
+									"value": "1"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a forward exchange",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"quote\": {\r\n            \"id\": \"815dedf0-90fe-49e3-98f7-a95559aa9787\",\r\n            \"rate\": 1.2627,\r\n            \"baseCurrency\": \"GBP\",\r\n            \"termsCurrency\": \"EUR\",\r\n            \"buyCurrency\": \"GBP\",\r\n            \"sellCurrency\": \"EUR\",\r\n            \"buyAmount\": 3.00,\r\n            \"sellAmount\": 3.78,\r\n            \"baseIsDealt\": true,\r\n            \"baseIsSell\": false,\r\n            \"valueDate\": \"2025-03-14T00:00:00Z\",\r\n            \"hmac\": \"zMUwk1M/tToqSUA/F9TDxLi4Lu7S2I62ukBAhzMsMnU=\",\r\n            \"expiryDate\": 1741269974067,\r\n            \"timestamp\": 1741269374067,\r\n            \"depositCurrency\": \"GBP\",\r\n            \"depositAmount\": 0.00,\r\n            \"paymentMethod\": 1\r\n      },\r\n      \"reasonForTradeId\": \"34\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges/forwards",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges",
+								"forwards"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Find exchanges",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"findExchange\",\r\n    \"attributes\": {\r\n      //\"createdBy\": \"Test User\",\r\n      \"dealDateFrom\": \"2018-10-10\",\r\n      \"dealDateTo\": \"2025-12-10\",\r\n      \"valueDateFrom\": \"2018-10-10\",\r\n      \"valueDateTo\": \"2025-12-10\",\r\n      \"exchangeStatus\": \"Created\",\r\n      \"buyAmountFrom\": \"1.00\",\r\n      \"buyAmountTo\": \"5000.00\",\r\n      \"sellAmountFrom\": \"1.00\",\r\n      \"sellAmountTo\": \"5000.00\",\r\n      \"baseCurrency\": \"GBP\"//,\r\n      //\"termsCurrency\": \"EUR\"//,\r\n      //\"buyCurrency\": \"GBP\",\r\n      //\"sellCurrency\": \"EUR\",\r\n      //\"dealReference\": \"exchangeRef\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/exchanges/find",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"exchanges",
+								"find"
+							],
+							"query": [
+								{
+									"key": "page[size]",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "page[number]",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+					},
+					"response": []
+				}
+			],
+			"description": "Exchanges endpoints"
+		},
+		{
+			"name": "transfers",
+			"item": [
+				{
+					"name": "Get all transfers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transfers",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transfers"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will get all the transfers associated to a specified account ID and their details. Results can be sorted by Id, TransferAmount, TransferDate, CreatedAt, or UpdatedAt."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a single transfer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transfers/:id",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transfers",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "id",
+									"value": "{{id}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual transfer associated with a specified account ID and its related receiving account details. Requires you to know the transfer ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get transfer accounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transferAccounts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transferAccounts"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return a list of accounts you can send funds to using the create transfer endpoint, for a given Account ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a transfer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"receivingAccountId\": 452708,\r\n      \"transferAmount\": 100,\r\n      \"transferCurrency\": \"GBP\",\r\n      \"transferReference\": \"payref\",\r\n      \"clientReference\": \"payref\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transfers/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transfers",
+								""
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will create a transfer between moneycorp accounts. A transfer can occur between your accounts (internal), or approved 3rd party moneycorp accounts (external). See the Transfer Accounts endpoint for more details on possible transfer destinations. Transfers are instant and cannot be cancelled. The sending account requires sufficient available balance to successfully create a transfer."
+					},
+					"response": []
+				},
+				{
+					"name": "Find transfers",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"findTransfer\",\r\n    \"attributes\": {\r\n      \"createdAtFrom\": \"2018-11-21T11:51:19.853Z\",\r\n      \"createdAtTo\": \"2018-11-21T11:51:19.853Z\",\r\n      \"updatedDateFrom\": \"2018-11-21T11:51:19.853Z\",\r\n      \"updatedDateTo\": \"2018-11-21T11:51:19.853Z\",\r\n      \"createdBy\": \"string\",\r\n      \"transferStatus\": \"string\",\r\n      \"receivingAccountId\": 0,\r\n      \"transferDateFrom\": \"2018-11-21T11:51:19.853Z\",\r\n      \"transferDateTo\": \"2018-11-21T11:51:19.853Z\",\r\n      \"transferAmountFrom\": 0,\r\n      \"transferAmountTo\": 0,\r\n      \"transferCurrency\": \"string\",\r\n      \"transferReference\": \"string\",\r\n      \"clientReference\": \"string\"\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transfers/find",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transfers",
+								"find"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will find all the transfers sent from a specified account ID and their details using a number of optional fields. Results can be sorted by Id, TransferAmount, TransferDate, CreatedAt, or UpdatedAt."
+					},
+					"response": []
+				}
+			],
+			"description": "Transfers endpoints",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{TOKEN}}",
+						"type": "string"
+					}
+				]
+			}
+		},
+		{
+			"name": "transactions",
+			"item": [
+				{
+					"name": "Get a single transaction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transactions/:transactionId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transactions",
+								":transactionId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "transactionId",
+									"value": "1602509789"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual transaction associated with a specified account and transaction ID. A transaction represents any movement of funds on your available balance."
+					},
+					"response": []
+				},
+				{
+					"name": "Find running balances",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transactions/statements/:currency?TransactionDateTimeFrom=2018-04-02T10:53:49.7270000&TransactionDateTimeTo=2025-04-03T10:53:49.7270000",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transactions",
+								"statements",
+								":currency"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								},
+								{
+									"key": "PendingTransactions",
+									"value": "false",
+									"description": "set to false by default",
+									"disabled": true
+								},
+								{
+									"key": "TransactionDateTimeFrom",
+									"value": "2018-04-02T10:53:49.7270000"
+								},
+								{
+									"key": "TransactionDateTimeTo",
+									"value": "2025-04-03T10:53:49.7270000"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "currency",
+									"value": "GBP"
+								}
+							]
+						},
+						"description": "This endpoint will return any running balances meeting the search parameters posted in the request body. A transaction represents any movement of funds on your available balance."
+					},
+					"response": []
+				},
+				{
+					"name": "Find transactions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"findTransaction\",\r\n    \"attributes\": {\r\n      \"currency\": \"GBP\",\r\n      \"transactionDateTimeFrom\": \"2018-04-02T09:53:49.727Z\",\r\n      \"transactionDateTimeTo\": \"2025-04-03T09:53:49.727Z\",\r\n      \"amountGreaterThan\": \"1.00\",\r\n      \"amountLessThan\": \"1500.00\",\r\n      \"action\": \"Debit\",\r\n      \"transactionType\": \"Payment\"//,\r\n      //\"relatedId\": \"123456\",\r\n      //\"clientReference\": \"clientref\",\r\n      //\"transactionReference\": \"transRef\",\r\n      //\"paymentInReference\": \"paymentInRef\",\r\n      //\"pendingTransactions\": false\r\n    }\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/transactions/find",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"transactions",
+								"find"
+							],
+							"query": [
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return any transactions meeting the search parameters posted in the request body. A transaction represents any movement of funds on your available balance. When PendingTransactions parameter is provided and has value True, the search will return both payments and exchanges in pending status. The times passed in transactionDateTimeFrom and transactionDateTimeTo are considered as being in UK timezine and so is the time in the returned createdAt attribute."
+					},
+					"response": []
+				}
+			],
+			"description": "Transactions endpoints"
+		},
+		{
+			"name": "diagnostics",
+			"item": [
+				{
+					"name": "Produces a heartbeat tick",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, text/plain"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/diagnostics/heartbeat",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"diagnostics",
+								"heartbeat"
+							]
+						},
+						"description": "This is a diagnostics endpoint that can be used to see whether the application is active.\r\nThe value returned is the current DateTime represented in ticks."
+					},
+					"response": []
+				}
+			],
+			"description": "Diagnostics endpoints"
+		},
+		{
+			"name": "references",
+			"item": [
+				{
+					"name": "Get recipient requirements",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/recipientRequirements/:id?currencyCode={{currencyCode}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"recipientRequirements",
+								":id"
+							],
+							"query": [
+								{
+									"key": "currencyCode",
+									"value": "{{currencyCode}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{id}}"
+								}
+							]
+						},
+						"description": "This endpoint will return the fields required to create a recipient for the specified bank account country and currency combination, can return all rules for a given country as well. Will also return a regular expression for each required field for validation purposes.\n\nThe response will list a collection of objects, each of which define: the name of a field that must be supplied as part of the country/currency pair rule set, whether the field is mandatory or optional, a regular expression for the field's data and optionally data about the type of branch code required.\n\naccountCurrency - The 3 letter currency code of the bank account for the recipient.\n\naccountCountry - The country of the bank account for the recipient.\n\naccountName - The name of the bank account for the recipient.\n\nbranchCode - The local routing code of the bank account for the recipient.\n\naccountNumber - The account number of the bank account for the recipient.\n\nsubAccount - The sub account number of the bank account for the recipient.\n\nswiftBicCode - The SWIFT BIC code of the bank account for the recipient.\n\niban - The IBAN of the bank account for the recipient.\n\nrecipientStreet - The street address of the recipient.\n\nrecipientCity - The city of the recipient.\n\nrecipientStateOrProvince - The state or province of the recipient.\n\nrecipientZipPostCode - The zip or post code of the recipient.\n\nrecipientCountry - The country of the recipient.\n\nAccountHolderType - The Account Holder Type of the recipient.\n\nAccountType - The Account Type of the recipient.\n\nallowPartialMatchCreation - Flag for allowing partial match.\n\naccountReference - The Account Reference of the recipient."
+					},
+					"response": []
+				},
+				{
+					"name": "Get supported countries",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/countries",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"countries"
+							]
+						},
+						"description": "This endpoint will get all supported countries for creating recipients."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a specific supported country",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/countries/:id",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"countries",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{id}}"
+								}
+							]
+						},
+						"description": "This endpoint will get a supported country for creating a recipient."
+					},
+					"response": []
+				},
+				{
+					"name": "Get supported currencies",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/currencies",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"currencies"
+							]
+						},
+						"description": "This endpoint will get all supported currencies including details about their decimal precision, full name and codesEndFragment"
+					},
+					"response": []
+				},
+				{
+					"name": "Get supported currency",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/currencies/:id",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"currencies",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{id}}"
+								}
+							]
+						},
+						"description": "This endpoint will get a specific supported currency including details about its decimal precision, full name and code."
+					},
+					"response": []
+				},
+				{
+					"name": "Get unsupported payment dates",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/currencies/:id/unsupportedPaymentDates",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"currencies",
+								":id",
+								"unsupportedPaymentDates"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{id}}"
+								}
+							]
+						},
+						"description": "This endpoint will return a list of dates when payments cannot be made for a given payment currency. Unsupported payment dates are determined by holidays and weekends for the payment currency and the location of your moneycorp settlement accounts. Returns dates going out for 2 years from today."
+					},
+					"response": []
+				},
+				{
+					"name": "Get payment purposes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/currencies/:id/paymentPurposes",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"currencies",
+								":id",
+								"paymentPurposes"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "AED"
+								}
+							]
+						},
+						"description": "This endpoint will return a list of payment purposes available for a given payment currency."
+					},
+					"response": []
+				},
+				{
+					"name": "Get supported exchange reasons",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}​/references/exchangeReasons",
+							"host": [
+								"{{URL}}​"
+							],
+							"path": [
+								"references",
+								"exchangeReasons"
+							]
+						},
+						"description": "This endpoint will get all supported exchange reasons for creating exchanges."
+					},
+					"response": []
+				},
+				{
+					"name": "Get IBAN route info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}​/references/routeInfo/ibans/:iban",
+							"host": [
+								"{{URL}}​"
+							],
+							"path": [
+								"references",
+								"routeInfo",
+								"ibans",
+								":iban"
+							],
+							"variable": [
+								{
+									"key": "iban",
+									"value": "GB23MIDL40051539622031"
+								}
+							]
+						},
+						"description": "This endpoint will return route info for the given iban."
+					},
+					"response": []
+				},
+				{
+					"name": "Get SwiftBic route info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}​/references/routeInfo/swiftbics/:swiftbic",
+							"host": [
+								"{{URL}}​"
+							],
+							"path": [
+								"references",
+								"routeInfo",
+								"swiftbics",
+								":swiftbic"
+							],
+							"variable": [
+								{
+									"key": "swiftbic",
+									"value": "HKBAAU2SSYD"
+								}
+							]
+						},
+						"description": "This endpoint will return route info for the given swiftbic."
+					},
+					"response": []
+				},
+				{
+					"name": "Get routing locations capabilities",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/routeCapabilities/routingCodes/:routingCode?countryCode=US",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"routeCapabilities",
+								"routingCodes",
+								":routingCode"
+							],
+							"query": [
+								{
+									"key": "countryCode",
+									"value": "US"
+								}
+							],
+							"variable": [
+								{
+									"key": "routingCode",
+									"value": "212222222"
+								}
+							]
+						},
+						"description": "This endpoint will return locations for the given capabilities routing."
+					},
+					"response": []
+				},
+				{
+					"name": "Get routing code correspondents",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}​/references/currencies/:currencyCode/routingCodes/:routingCode/correspondents?countryCode=US",
+							"host": [
+								"{{URL}}​"
+							],
+							"path": [
+								"references",
+								"currencies",
+								":currencyCode",
+								"routingCodes",
+								":routingCode",
+								"correspondents"
+							],
+							"query": [
+								{
+									"key": "countryCode",
+									"value": "US"
+								}
+							],
+							"variable": [
+								{
+									"key": "currencyCode",
+									"value": "GBP"
+								},
+								{
+									"key": "routingCode",
+									"value": "212222222"
+								}
+							]
+						},
+						"description": "This endpoint will return correspondents for the given route code."
+					},
+					"response": []
+				},
+				{
+					"name": "Get SwiftBic correspondents",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}​/references/currencies/GBP/swiftbics/:swiftBic/correspondents",
+							"host": [
+								"{{URL}}​"
+							],
+							"path": [
+								"references",
+								"currencies",
+								"GBP",
+								"swiftbics",
+								":swiftBic",
+								"correspondents"
+							],
+							"variable": [
+								{
+									"key": "swiftBic",
+									"value": "HKBAAU2SSYD"
+								}
+							]
+						},
+						"description": "This endpoint will return correspondents for the given swiftbic."
+					},
+					"response": []
+				},
+				{
+					"name": "Get IBAN correspondents",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}​/references/currencies/:currencyCode/ibans/:iban/correspondents",
+							"host": [
+								"{{URL}}​"
+							],
+							"path": [
+								"references",
+								"currencies",
+								":currencyCode",
+								"ibans",
+								":iban",
+								"correspondents"
+							],
+							"variable": [
+								{
+									"key": "currencyCode",
+									"value": "GBP"
+								},
+								{
+									"key": "iban",
+									"value": "GB23MIDL40051539622031"
+								}
+							]
+						},
+						"description": "This endpoint will return correspondents for the given iban."
+					},
+					"response": []
+				},
+				{
+					"name": "Get account limits",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/accounts/:accountId/limits",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"accounts",
+								":accountId",
+								"limits"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return limits for the given account, including client dealing and direct debit (where applicable)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get associated receiving accounts V2",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json; v2"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/accounts/:accountId/receivingAccounts/:currencyCode",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"accounts",
+								":accountId",
+								"receivingAccounts",
+								":currencyCode"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "currencyCode",
+									"value": "GBP"
+								}
+							]
+						},
+						"description": "This endpoint will return the associated receiving accounts for the specified account ID and currency."
+					},
+					"response": []
+				},
+				{
+					"name": "Get associated receiving accounts V1",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/accounts/:accountId/receivingAccounts/:currencyCode",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"accounts",
+								":accountId",
+								"receivingAccounts",
+								":currencyCode"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "currencyCode",
+									"value": "GBP"
+								}
+							]
+						},
+						"description": "This endpoint will return the associated receiving accounts for the specified account ID and currency."
+					},
+					"response": []
+				}
+			],
+			"description": "Reference endpoints"
+		},
+		{
+			"name": "bankFeeds",
+			"item": [
+				{
+					"name": "Get source account transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/bankFeeds/:clientKey/sourceAccounts/:id/transactions?createdFrom=2020-01-01T00:00:00&createdTo=2025-03-10T00:00:00",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"bankFeeds",
+								":clientKey",
+								"sourceAccounts",
+								":id",
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "createdFrom",
+									"value": "2020-01-01T00:00:00",
+									"description": "The lower date time stamp to search when a transaction was created."
+								},
+								{
+									"key": "createdTo",
+									"value": "2025-03-10T00:00:00",
+									"description": "The upper date time stamp to search when a transaction was created."
+								},
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "clientKey",
+									"value": "",
+									"description": "Client Unique Identifier associated to a company"
+								},
+								{
+									"key": "id",
+									"value": "",
+									"description": "The Id represents a currency code that identifies the source account for retrieving transactions"
+								}
+							]
+						},
+						"description": "This endpoint retrieves bank reconciliation transaction account information for a specified ERP connection."
+					},
+					"response": []
+				}
+			],
+			"description": "Bank feeds endpoints"
+		},
+		{
+			"name": "notifications",
+			"item": [
+				{
+					"name": "Get all notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/notifications",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"notifications"
+							]
+						},
+						"description": "This endpoint will get all notifications."
+					},
+					"response": []
+				},
+				{
+					"name": "Get a notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/notifications/:notificationId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"notifications",
+								":notificationId"
+							],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "35538"
+								}
+							]
+						},
+						"description": "This endpoint will get a single notification."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"url\": \"http://localhost/webhook\",\r\n      \"eventType\": \"PaymentIn.Created\",\r\n      \"skinnyPayload\": true,\r\n      \"detachedJws\": true,\r\n      //\"copyToChildAccounts\": true,\r\n      \"headers\": [\r\n        {\r\n          \"headerKey\": \"Authorization\",\r\n          \"headerValue\": \"1MySuperSecretAuthKey\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/notifications",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"notifications"
+							]
+						},
+						"description": "This endpoint will create a notification."
+					},
+					"response": []
+				},
+				{
+					"name": "Update a notification - Deprecated",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"url\": \"http://localhost/webhook\",\r\n      \"eventType\": \"PaymentIn.Created\",\r\n      \"skinnyPayload\": true,\r\n      \"detachedJws\": true,\r\n      \"headers\": [\r\n        {\r\n          \"headerKey\": \"Authorization\",\r\n          \"headerValue\": \"1MySuperSecretAuthKey\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/notifications/:id",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"notifications",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "This endpoint will update a notification."
+					},
+					"response": []
+				},
+				{
+					"name": "Update a notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"url\": \"http://localhost/webhook\",\r\n      \"eventType\": \"PaymentIn.Created\",\r\n      \"skinnyPayload\": true,\r\n      \"detachedJws\": true,\r\n      \"headers\": [\r\n        {\r\n          \"headerKey\": \"Authorization\",\r\n          \"headerValue\": \"1MySuperSecretAuthKeyUpdated\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/notifications/:notificationId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"notifications",
+								":notificationId"
+							],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "35538"
+								}
+							]
+						},
+						"description": "This endpoint will update a notification."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/notifications/:notificationId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"notifications",
+								":notificationId"
+							],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "35538"
+								}
+							]
+						},
+						"description": "This endpoint will delete a notification."
+					},
+					"response": []
+				}
+			],
+			"description": "Notifications endpoints"
+		},
+		{
+			"name": "directDebit",
+			"item": [
+				{
+					"name": "Get direct debit utilisation for specified account ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/directDebit/utilization",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"directDebit",
+								"utilization"
+							],
+							"query": [
+								{
+									"key": "ApplicationSourceId",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an individual debit utilization associated to a specified account and its related details."
+					},
+					"response": []
+				}
+			],
+			"description": "Direct Debit endpoints"
+		},
+		{
+			"name": "exchangeRates",
+			"item": [
+				{
+					"name": "Get exchange rate for single currency pair",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/ExchangeRates/:baseCurrency/:termsCurrency",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"ExchangeRates",
+								":baseCurrency",
+								":termsCurrency"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "09c2ee54-e978-4ac9-85ee-a7690b84fd9c",
+									"description": "should be client id, GUID",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "baseCurrency",
+									"value": "USD"
+								},
+								{
+									"key": "termsCurrency",
+									"value": "GBP"
+								}
+							]
+						},
+						"description": "Get the exchange rate for a single currency pair. An optional query string parameter can be used to provide a CRM Account GUID. If supplied, this is used to find the spread for the client, otherwise a default value is used. On success, the response contains the requested rate from base to terms, and an inverted rate from terms to base."
+					},
+					"response": []
+				},
+				{
+					"name": "Get exchange rate for multiple currency pairs - V1",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/ExchangeRates/:baseCurrency?terms=EUR, AUD",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"ExchangeRates",
+								":baseCurrency"
+							],
+							"query": [
+								{
+									"key": "terms",
+									"value": "EUR, AUD",
+									"description": " required field"
+								},
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "id",
+									"value": null,
+									"description": "should be a guid",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "baseCurrency",
+									"value": "USD"
+								}
+							]
+						},
+						"description": "Get the exchange rate for a multiple currency pairs. An optional query string parameter can be used to provide a CRM Account GUID. If supplied, this is used to find the spread for the client, otherwise a default value is used. On success, the response contains the requested rate from base to terms, and an inverted rate from terms to base."
+					},
+					"response": []
+				},
+				{
+					"name": "Get exchange rate for multiple currency pairs - V2",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;v2",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/ExchangeRates/:baseCurrency?terms=EUR, AUD",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"ExchangeRates",
+								":baseCurrency"
+							],
+							"query": [
+								{
+									"key": "terms",
+									"value": "EUR, AUD",
+									"description": " required field"
+								},
+								{
+									"key": "page[number]",
+									"value": "{{page[number]}}",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "{{page[size]}}",
+									"disabled": true
+								},
+								{
+									"key": "id",
+									"value": null,
+									"description": "should be a guid",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "baseCurrency",
+									"value": "USD"
+								}
+							]
+						},
+						"description": "Get the exchange rate for a multiple currency pairs. An optional query string parameter can be used to provide a CRM Account GUID. If supplied, this is used to find the spread for the client, otherwise a default value is used. On success, the response contains the requested rate from base to terms, and an inverted rate from terms to base."
+					},
+					"response": []
+				}
+			],
+			"description": "Exchange Rates endpoints"
+		},
+		{
+			"name": "batches",
+			"item": [
+				{
+					"name": "Get all batches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches?description=Vendor Payment - Europe",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches"
+							],
+							"query": [
+								{
+									"key": "description",
+									"value": "Vendor Payment - Europe"
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will return an array of batches for a given account id. A description filter can also be supplied."
+					},
+					"response": []
+				},
+				{
+					"name": "Get status of a single batch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches/:batchId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches",
+								":batchId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "batchId",
+									"value": "2e69da06-8f17-4958-8fb2-bfe7022da20d"
+								}
+							]
+						},
+						"description": "This endpoint will return the status of the requested batch including an integer to represent the status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get the payment lines within a batch",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches/:batchId/payments",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches",
+								":batchId",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "paymentCurrency",
+									"value": "USD",
+									"disabled": true
+								},
+								{
+									"key": "sellCurrency",
+									"value": "EUR",
+									"disabled": true
+								},
+								{
+									"key": "withValidationErrors",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "page[number]",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "page[size]",
+									"value": "1",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "batchId",
+									"value": "2e69da06-8f17-4958-8fb2-bfe7022da20d"
+								}
+							]
+						},
+						"description": "This endpoint will return the status of all payment lines within a batch."
+					},
+					"response": []
+				},
+				{
+					"name": "Create a batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": {\r\n      \"description\": \"Vendor Payments - Europe\"\r\n    }\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								}
+							]
+						},
+						"description": "This endpoint will create a new and empty batch."
+					},
+					"response": []
+				},
+				{
+					"name": "Append FxPayments to a batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"type\": \"string\",\r\n    \"attributes\": [\r\n      {\r\n        \"recipientId\": 12345,\r\n        \"paymentCurrency\": \"EUR\",\r\n        \"paymentAmount\": 125.99,\r\n        \"sellCurrency\": \"USD\",\r\n        \"sellAmount\": 123.99,\r\n        \"batchReference\": \"\",\r\n        \"paymentReference\": \"\",\r\n        \"clientReference\": \"\",\r\n        \"paymentType\": 0,\r\n        \"paymentPurpose\": \"\",\r\n        \"settlementMethod\": 1,\r\n        \"valueDate\": \"2025-03-11\",\r\n        \"paymentDate\": \"2025-03-11\",\r\n        \"mandateId\": 1,\r\n        \"ultimateDebtor\": {\r\n          \"accountId\": \"string\",\r\n          \"name\": \"string\",\r\n          \"address1\": \"string\",\r\n          \"address2\": \"string\",\r\n          \"address3\": \"string\",\r\n          \"city\": \"string\",\r\n          \"postcode\": \"string\",\r\n          \"country\": \"string\",\r\n          \"identificationIsoCountry\": \"string\",\r\n          \"identificationType\": \"string\",\r\n          \"identificationValue\": \"string\"\r\n        }\r\n      }\r\n    ]\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches/:batchId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches",
+								":batchId"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "batchId",
+									"value": "2e69da06-8f17-4958-8fb2-bfe7022da20d"
+								}
+							]
+						},
+						"description": "The endpoint will append an array of FxPayments to the batch. The upper limit for the Batch is 2000 rows."
+					},
+					"response": []
+				},
+				{
+					"name": "Request a quote for a batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches/:batchId/quote",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches",
+								":batchId",
+								"quote"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "batchId",
+									"value": "2e69da06-8f17-4958-8fb2-bfe7022da20d"
+								}
+							]
+						},
+						"description": "This endpoint will request a quote for the cost of executing all the fxpayments in the batch."
+					},
+					"response": []
+				},
+				{
+					"name": "Request to accept the quote for a batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches/:batchId/quote/accept",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches",
+								":batchId",
+								"quote",
+								"accept"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "batchId",
+									"value": "2e69da06-8f17-4958-8fb2-bfe7022da20d"
+								}
+							]
+						},
+						"description": "This endpoint will accept the batch's quote and then continue to execute all the FxPayments within the batch."
+					},
+					"response": []
+				},
+				{
+					"name": "Clone failed payments from a batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Idempotency-key",
+								"value": "{{Idempotency-Key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/accounts/:accountId/batches/:batchId/clonefailedbatch",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"accounts",
+								":accountId",
+								"batches",
+								":batchId",
+								"clonefailedbatch"
+							],
+							"variable": [
+								{
+									"key": "accountId",
+									"value": "{{accountId}}"
+								},
+								{
+									"key": "batchId",
+									"value": "2e69da06-8f17-4958-8fb2-bfe7022da20d"
+								}
+							]
+						},
+						"description": "This endpoint will create a new batch from the failed FxPayments within an existing batch."
+					},
+					"response": []
+				}
+			],
+			"description": "Batch payment processing endpoints"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
