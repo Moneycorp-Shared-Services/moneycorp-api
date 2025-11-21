@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "a9877e49-ff21-4bad-b588-5fdd3d5dd0bc",
+		"_postman_id": "bfe4ea73-d76d-4439-9541-3640cdd5269e",
 		"name": "Moneycorp API",
 		"description": "# Introduction\n\nWelcome to the Moneycorp API.\n\nOur API provides you with the ability to construct business solutions, including foreign exchange, repeat or one-off, domestic or cross-border multi-currency payments. With it you can manage your accounts for receiving funds, exchange in up to 34 currencies with live market rates aggregated from 14 partner banks and make payments globally with our payment network, supported by systems that pre-validate your recipients, reducing the risk of payment failures or delays in processing.\n\nWe recommend you read through the API documentation in full to familiarise yourself with the features and workflows associated with the product. Demo accounts and sandbox access can be provisioned for you by your Moneycorp representative.\n\n# Overview\n\nBelow is a brief description of each of our API endpoints:\n\n**Login:**  \nBefore using the API, you must first obtain an authentication token by specifying the Login ID and API Key provided to you directly. This bearer token must be present in the Authorisation HTTP header when making all other API calls.\n\n**Accounts:**  \nUsed to manage your accounts, all objects created in our API are done in the context of an account, these endpoints allow you to look up and locate the relevant account to use for subsequent calls.\n\n**Balances:**  \nUsed to view the balances of your Moneycorp receiving accounts, split into each of the currencies supported by the Moneycorp API.\n\n**Recipients:**  \nOur recipients endpoints allows you to create, validate and retrieve your recipients for subsequent payments. We use our in house solution to ensure data is validated prior to payment submission to ensure delivery of funds and avoid any delays in processing.\n\n**Payments:**  \nOur payments endpoints are designed to allow you create payments to nearly every country in the world using a range of local and direct clearing methods. You can use these endpoints to search for previously sent payments, check payment status or create new payments.\n\n**Reference:**  \nOur reference endpoints are designed to provide you with all the information you should need to make full use of our other endpoints, such as obtaining recipient requirements, payment holidays and supported countries and currencies.\n\n# Getting Started\n\nAn example workflow is set out below for guidance on how the Moneycorp API operates in practice.\n\nIn this example, we want to make a £100,000 GBP payment to a recipient based in the UK.\n\n**1\\. Log in to the API:**  \nTo begin you will need to obtain an access token to allow you to reach all other API endpoints. Supply your unique Login ID and API Key to the login endpoint. On success, an access token will be granted.\n\n**2\\. Get your account details:**  \nNext you should retrieve all your accounts associated with your API user so when you move into creating payments they are done under the relevant account, most endpoints will also require an Account ID.\n\n**3\\. Check recipient field requirements:**  \nNext you may want to set up some recipients to send payments to, you can use our get recipient requirements endpoint to understand what information you must provide for a recipient for a given country/currency combination. For this example, we want to know what the requirements are for a recipient in the UK and a GBP account.\n\n**4\\. Create a recipient:**  \nNow you have the required information for creating a recipient you can perform this action using our create recipient endpoint, we will also validate the details provided to avoid any delays in processing of payments.\n\n**5\\. Create a payment:**  \nOnce the recipient has been created you can now create a payment for it using the returned recipient ID and passing it into the create payment endpoint.\n\n**6\\. Check your balance:**  \nPayments will only be released once there is sufficient funds available on your account balance, you can do this by paying directly into your Moneycorp account. You can pay into your Moneycorp account using your account reference found on the get account endpoint. Then you can use the get balances endpoint to check your account balance.\n\n**7\\. Check your Payment's status:**  \nFollowing a successful payment creation, updates on the status of the payment can be returned from the get payment endpoint.\n\n# Idempotency\n\nMoneycorp API utilises Idempotency across all create endpoints in order to prevent duplicate creation of resources.\n\nIdempotency in the Moneycorp API allows a user to safely retry a particular request, without the potentially unintended consequences of performing an operation multiple times. This is required for the situation when a response message is not received for a create request (e.g. creating a payment). In this situation a client would be unaware whether the original request was processed and the response was lost in transit, or if the request was never received at all. In the case where the original request was processed, subsequent retries of the request should not create duplicate resources or cause duplicate payments.\n\nTo perform an Idempotent request you must provide an `Idempotency-Key`: HTTP header when sending the request. The key is a unique value that is generated by the client to identify a particular request. This key can be any format, however, we recommend using a GUID in order to reduce the chance of idempotency key collisions. Keys expire after 15 minutes and requests are processed as usual if a key is re-used after that time.\n\nIf a request is received with a previously processed key one of three things will happen.\n\n- If the previous request is still being processed a Conflict (HttpStatus code 409) error will be generated.\n    \n- If the previous request was not successful the API will attempt to re-process the request.\n    \n- If the previous request was successful a Conflict (HttpStatus code 409) error will be generated. In addition the previous successful response will be included in the error payload.\n    \n\n**GET** requests are intrinsically Idempotent, so providing the Idempotency-Key header is not necessary.\n\n# Support\n\nContact your Moneycorp representative for further assistance.\n\n**Important Notice:**  \nThe API sandbox is a test environment that will mimic the characteristics of the production environment. In the test environment, you represent and warrant not to use real data (including personal data and account numbers) under any circumstances.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "44324089"		
+		"_exporter_id": "45412734"
 	},
 	"item": [
 		{
@@ -618,7 +618,7 @@
 						"header": [
 							{
 								"key": "Accept",
-								"value": "application/json, application/vnd.api+json"
+								"value": "application/json;v2, application/vnd.api+json;v2"
 							},
 							{
 								"key": "Idempotency-Key",
@@ -659,7 +659,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will get all the Accounts associated to your user and their details."
+						"description": "This endpoint will get all the Accounts associated to your user and their details.  \nThe Accept header must be set to application/json;v2."
 					},
 					"response": []
 				},
@@ -945,7 +945,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will get the balance for a particular currency for the specified account."
+						"description": "This endpoint will create a fee associated with an existing account balance line."
 					},
 					"response": []
 				}
@@ -1663,7 +1663,7 @@
 						"header": [
 							{
 								"key": "Accept",
-								"value": "application/json, application/vnd.api+json"
+								"value": "application/json;v2, application/vnd.api+json;v2"
 							}
 						],
 						"url": {
@@ -1688,7 +1688,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will return an individual recipient, this includes the recipient's bank account details and associated details for receiving of a payment. Requires you to know the recipient ID."
+						"description": "This endpoint will return an individual recipient, this includes the recipient's bank account details and associated details for receiving of a payment. Requires you to know the recipient ID.  \nThe Accept header must be set to application/json;v2."
 					},
 					"response": []
 				},
@@ -1713,7 +1713,7 @@
 							},
 							{
 								"key": "Content-Type",
-								"value": "application/json",
+								"value": "application/json;v2",
 								"type": "text"
 							},
 							{
@@ -1742,7 +1742,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will create an individual recipient, associated to a specific Account Id. This recipient can then be used to create a payment against using the Create Payment endpoint. Recipient details are validated prior to creation, any errors will be returned back with a description of any problems found during validation. To see what fields are required for a given recipient country/currency combination use the Get Recipient Requirements endpoint."
+						"description": "This endpoint will create an individual recipient, associated to a specific Account Id. This recipient can then be used to create a payment against using the Create Payment endpoint. Recipient details are validated prior to creation, any errors will be returned back with a description of any problems found during validation. To see what fields are required for a given recipient country/currency combination use the Get Recipient Requirements endpoint.  \nThe Accept header must be set to application/json;v2."
 					},
 					"response": []
 				},
@@ -1821,7 +1821,7 @@
 							},
 							{
 								"key": "Content-Type",
-								"value": "application/json",
+								"value": "application/json;v2",
 								"type": "text"
 							},
 							{
@@ -1851,7 +1851,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will validate an individual recipient, associated to a specific Account Id. AllowPartialMatchCreation flag is not taken into account."
+						"description": "This endpoint will validate an individual recipient, associated to a specific Account Id. AllowPartialMatchCreation flag is not taken into account.  \nThe Accept header must be set to application/json;v2."
 					},
 					"response": []
 				},
@@ -2573,7 +2573,7 @@
 					"response": []
 				},
 				{
-					"name": "Get a spot quote",
+					"name": "Get a spot exchange quote",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -3450,7 +3450,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will return the fields required to create a recipient for the specified bank account country and currency combination, can return all rules for a given country as well. Will also return a regular expression for each required field for validation purposes.\n\nThe response will list a collection of objects, each of which define: the name of a field that must be supplied as part of the country/currency pair rule set, whether the field is mandatory or optional, a regular expression for the field's data and optionally data about the type of branch code required.\n\naccountCurrency - The 3 letter currency code of the bank account for the recipient.\n\naccountCountry - The country of the bank account for the recipient.\n\naccountName - The name of the bank account for the recipient.\n\nbranchCode - The local routing code of the bank account for the recipient.\n\naccountNumber - The account number of the bank account for the recipient.\n\nsubAccount - The sub account number of the bank account for the recipient.\n\nswiftBicCode - The SWIFT BIC code of the bank account for the recipient.\n\niban - The IBAN of the bank account for the recipient.\n\nrecipientStreet - The street address of the recipient.\n\nrecipientCity - The city of the recipient.\n\nrecipientStateOrProvince - The state or province of the recipient.\n\nrecipientZipPostCode - The zip or post code of the recipient.\n\nrecipientCountry - The country of the recipient.\n\nAccountHolderType - The Account Holder Type of the recipient.\n\nAccountType - The Account Type of the recipient.\n\nallowPartialMatchCreation - Flag for allowing partial match.\n\naccountReference - The Account Reference of the recipient."
+						"description": "This endpoint will return the fields required to create a recipient for the specified bank account country and currency combination, can return all rules for a given country, and will also return the complete set of rules for all valid country-currency pairs.\n\nThe response will list a collection of objects, each of which define: the name of a field that must be supplied as part of the country/currency pair rule set, whether the field is mandatory or optional, a regular expression for the field's data and optionally data about the type of branch code required.\n\naccountCurrency - The 3 letter currency code of the bank account for the recipient.\n\naccountCountry - The country of the bank account for the recipient.\n\naccountName - The name of the bank account for the recipient.\n\nbranchCode - The local routing code of the bank account for the recipient. Example: Sort Code, ABA (American Bankers Association) Routing Number.\n\naccountNumber - The account number of the bank account for the recipient.\n\nsubAccount - The sub account number of the bank account for the recipient.\n\nswiftBicCode - The SWIFT BIC code of the bank account for the recipient.\n\niban - The IBAN of the bank account for the recipient.\n\nrecipientStreet - The street address of the recipient.\n\nrecipientCity - The city of the recipient.\n\nrecipientStateOrProvince - The state or province of the recipient.\n\nrecipientZipPostCode - The zip or post code of the recipient.\n\nrecipientCountry - The country of the recipient.\n\nAccountHolderType - The Account Holder Type of the recipient.\n\nAccountType - The Account Type of the recipient.\n\nallowPartialMatchCreation - Flag for allowing partial match.\n\naccountReference - The Account Reference of the recipient."
 					},
 					"response": []
 				},
@@ -4059,7 +4059,7 @@
 						"header": [
 							{
 								"key": "Accept",
-								"value": "application/json; v2"
+								"value": "application/json;v2"
 							}
 						],
 						"url": {
@@ -4085,7 +4085,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will return the associated receiving accounts for the specified account ID and currency."
+						"description": "This endpoint will return the associated receiving accounts for the specified account ID and currency.\n\nThe Accept header must be set to application/json;v2."
 					},
 					"response": []
 				},
