@@ -179,17 +179,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/accounts/:id",
+							"raw": "{{URL}}/accounts/:accountId",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"accounts",
-								":id"
+								":accountId"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "accountId",
 									"value": "{{id}}"
 								}
 							]
@@ -219,20 +219,20 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/accounts/:id/directDebit/mandate/:mandateId",
+							"raw": "{{URL}}/accounts/:accountId/directDebit/mandate/:mandateId",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"accounts",
-								":id",
+								":accountId",
 								"directDebit",
 								"mandate",
 								":mandateId"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "accountId",
 									"value": "{{accountId}}"
 								},
 								{
@@ -266,19 +266,19 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/accounts/:id/directDebit/mandates",
+							"raw": "{{URL}}/accounts/:accountId/directDebit/mandates",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"accounts",
-								":id",
+								":accountId",
 								"directDebit",
 								"mandates"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "accountId",
 									"value": "{{accountId}}"
 								}
 							]
@@ -684,7 +684,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/accounts/:accountId/contacts/:id",
+							"raw": "{{URL}}/accounts/:accountId/contacts/:contactId",
 							"host": [
 								"{{URL}}"
 							],
@@ -692,7 +692,7 @@
 								"accounts",
 								":accountId",
 								"contacts",
-								":id"
+								":contactId"
 							],
 							"variable": [
 								{
@@ -700,7 +700,7 @@
 									"value": ""
 								},
 								{
-									"key": "id",
+									"key": "contactId",
 									"value": ""
 								}
 							]
@@ -2983,7 +2983,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/accounts/:accountId/transfers/:id",
+							"raw": "{{URL}}/accounts/:accountId/transfers/:transferId",
 							"host": [
 								"{{URL}}"
 							],
@@ -2991,7 +2991,7 @@
 								"accounts",
 								":accountId",
 								"transfers",
-								":id"
+								":transferId"
 							],
 							"variable": [
 								{
@@ -2999,7 +2999,7 @@
 									"value": "{{accountId}}"
 								},
 								{
-									"key": "id",
+									"key": "transferId",
 									"value": "{{id}}"
 								}
 							]
@@ -3428,14 +3428,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/references/recipientRequirements/:id?currencyCode={{currencyCode}}",
+							"raw": "{{URL}}/references/recipientRequirements/:countryCode?currencyCode={{currencyCode}}",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"references",
 								"recipientRequirements",
-								":id"
+								":countryCode"
 							],
 							"query": [
 								{
@@ -3445,7 +3445,7 @@
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "countryCode",
 									"value": "{{id}}"
 								}
 							]
@@ -3509,18 +3509,18 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/references/countries/:id",
+							"raw": "{{URL}}/references/countries/:countryCode",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"references",
 								"countries",
-								":id"
+								":countryCode"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "countryCode",
 									"value": "{{id}}"
 								}
 							]
@@ -3584,18 +3584,18 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/references/currencies/:id",
+							"raw": "{{URL}}/references/currencies/:currencyCode",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"references",
 								"currencies",
-								":id"
+								":currencyCode"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "currencyCode",
 									"value": "{{id}}"
 								}
 							]
@@ -3625,19 +3625,19 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/references/currencies/:id/unsupportedPaymentDates",
+							"raw": "{{URL}}/references/currencies/:currencyCode/unsupportedPaymentDates",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"references",
 								"currencies",
-								":id",
+								":currencyCode",
 								"unsupportedPaymentDates"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "currencyCode",
 									"value": "{{id}}"
 								}
 							]
@@ -3667,19 +3667,19 @@
 							}
 						],
 						"url": {
-							"raw": "{{URL}}/references/currencies/:id/paymentPurposes",
+							"raw": "{{URL}}/references/currencies/:currencyCode/paymentPurposes",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"references",
 								"currencies",
-								":id",
+								":currencyCode",
 								"paymentPurposes"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "currencyCode",
 									"value": "AED"
 								}
 							]
@@ -4359,17 +4359,17 @@
 							}
 						},
 						"url": {
-							"raw": "{{URL}}/notifications/:id",
+							"raw": "{{URL}}/notifications/:notificationId",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
 								"notifications",
-								":id"
+								":notificationId"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "notificationId",
 									"value": ""
 								}
 							]
