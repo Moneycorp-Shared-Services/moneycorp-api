@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "bfe4ea73-d76d-4439-9541-3640cdd5269e",
 		"name": "Moneycorp API",
-		"description": "# Introduction\n\nWelcome to the Moneycorp API.\n\nOur API provides you with the ability to construct business solutions, including foreign exchange, repeat or one-off, domestic or cross-border multi-currency payments. With it you can manage your accounts for receiving funds, exchange in up to 34 currencies with live market rates aggregated from 14 partner banks and make payments globally with our payment network, supported by systems that pre-validate your recipients, reducing the risk of payment failures or delays in processing.\n\nWe recommend you read through the API documentation in full to familiarise yourself with the features and workflows associated with the product. Demo accounts and sandbox access can be provisioned for you by your Moneycorp representative.\n\n# Overview\n\nBelow is a brief description of each of our API endpoints:\n\n**Login:**  \nBefore using the API, you must first obtain an authentication token by specifying the Login ID and API Key provided to you directly. This bearer token must be present in the Authorisation HTTP header when making all other API calls.\n\n**Accounts:**  \nUsed to manage your accounts, all objects created in our API are done in the context of an account, these endpoints allow you to look up and locate the relevant account to use for subsequent calls.\n\n**Balances:**  \nUsed to view the balances of your Moneycorp receiving accounts, split into each of the currencies supported by the Moneycorp API.\n\n**Recipients:**  \nOur recipients endpoints allows you to create, validate and retrieve your recipients for subsequent payments. We use our in house solution to ensure data is validated prior to payment submission to ensure delivery of funds and avoid any delays in processing.\n\n**Payments:**  \nOur payments endpoints are designed to allow you create payments to nearly every country in the world using a range of local and direct clearing methods. You can use these endpoints to search for previously sent payments, check payment status or create new payments.\n\n**Reference:**  \nOur reference endpoints are designed to provide you with all the information you should need to make full use of our other endpoints, such as obtaining recipient requirements, payment holidays and supported countries and currencies.\n\n# Getting Started\n\nAn example workflow is set out below for guidance on how the Moneycorp API operates in practice.\n\nIn this example, we want to make a £100,000 GBP payment to a recipient based in the UK.\n\n**1\\. Log in to the API:**  \nTo begin you will need to obtain an access token to allow you to reach all other API endpoints. Supply your unique Login ID and API Key to the login endpoint. On success, an access token will be granted.\n\n**2\\. Get your account details:**  \nNext you should retrieve all your accounts associated with your API user so when you move into creating payments they are done under the relevant account, most endpoints will also require an Account ID.\n\n**3\\. Check recipient field requirements:**  \nNext you may want to set up some recipients to send payments to, you can use our get recipient requirements endpoint to understand what information you must provide for a recipient for a given country/currency combination. For this example, we want to know what the requirements are for a recipient in the UK and a GBP account.\n\n**4\\. Create a recipient:**  \nNow you have the required information for creating a recipient you can perform this action using our create recipient endpoint, we will also validate the details provided to avoid any delays in processing of payments.\n\n**5\\. Create a payment:**  \nOnce the recipient has been created you can now create a payment for it using the returned recipient ID and passing it into the create payment endpoint.\n\n**6\\. Check your balance:**  \nPayments will only be released once there is sufficient funds available on your account balance, you can do this by paying directly into your Moneycorp account. You can pay into your Moneycorp account using your account reference found on the get account endpoint. Then you can use the get balances endpoint to check your account balance.\n\n**7\\. Check your Payment's status:**  \nFollowing a successful payment creation, updates on the status of the payment can be returned from the get payment endpoint.\n\n# Idempotency\n\nMoneycorp API utilises Idempotency across all create endpoints in order to prevent duplicate creation of resources.\n\nIdempotency in the Moneycorp API allows a user to safely retry a particular request, without the potentially unintended consequences of performing an operation multiple times. This is required for the situation when a response message is not received for a create request (e.g. creating a payment). In this situation a client would be unaware whether the original request was processed and the response was lost in transit, or if the request was never received at all. In the case where the original request was processed, subsequent retries of the request should not create duplicate resources or cause duplicate payments.\n\nTo perform an Idempotent request you must provide an `Idempotency-Key`: HTTP header when sending the request. The key is a unique value that is generated by the client to identify a particular request. This key can be any format, however, we recommend using a GUID in order to reduce the chance of idempotency key collisions. Keys expire after 15 minutes and requests are processed as usual if a key is re-used after that time.\n\nIf a request is received with a previously processed key one of three things will happen.\n\n- If the previous request is still being processed a Conflict (HttpStatus code 409) error will be generated.\n    \n- If the previous request was not successful the API will attempt to re-process the request.\n    \n- If the previous request was successful a Conflict (HttpStatus code 409) error will be generated. In addition the previous successful response will be included in the error payload.\n    \n\n**GET** requests are intrinsically Idempotent, so providing the Idempotency-Key header is not necessary.\n\n# Support\n\nContact your Moneycorp representative for further assistance.\n\n**Important Notice:**  \nThe API sandbox is a test environment that will mimic the characteristics of the production environment. In the test environment, you represent and warrant not to use real data (including personal data and account numbers) under any circumstances.",
+		"description": "# Introduction\n\nWelcome to the Moneycorp API.\n\nOur API provides you with the ability to construct business solutions, including foreign exchange, repeat or one-off, domestic or cross-border multi-currency payments. With it you can manage your accounts for receiving funds, exchange in up to 34 currencies with live market rates aggregated from 14 partner banks and make payments globally with our payment network, supported by systems that pre-validate your recipients, reducing the risk of payment failures or delays in processing.\n\nWe recommend you read through the API documentation in full to familiarise yourself with the features and workflows associated with the product. Demo accounts and sandbox access can be provisioned for you by your Moneycorp representative.\n\n# Overview\n\nBelow is a brief description of each of our API endpoints:\n\n**Login:**  \nBefore using the API, you must first obtain an authentication token by specifying the Login ID and API Key provided to you directly. This bearer token must be present in the Authorisation HTTP header when making all other API calls.\n\n**Accounts:**  \nUsed to manage your accounts, all objects created in our API are done in the context of an account, these endpoints allow you to look up and locate the relevant account to use for subsequent calls.\n\n**Balances:**  \nUsed to view the balances of your Moneycorp receiving accounts, split into each of the currencies supported by the Moneycorp API.\n\n**Recipients:**  \nOur recipients endpoints allows you to create, validate and retrieve your recipients for subsequent payments. We use our in house solution to ensure data is validated prior to payment submission to ensure delivery of funds and avoid any delays in processing.\n\n**Payments:**  \nOur payments endpoints are designed to allow you create payments to nearly every country in the world using a range of local and direct clearing methods. You can use these endpoints to search for previously sent payments, check payment status or create new payments.\n\n**Reference:**  \nOur reference endpoints are designed to provide you with all the information you should need to make full use of our other endpoints, such as obtaining recipient requirements, payment holidays and supported countries and currencies.\n\n# Getting Started\n\nAn example workflow is set out below for guidance on how the Moneycorp API operates in practice.\n\nIn this example, we want to make a £100,000 GBP payment to a recipient based in the UK.\n\n**1\\. Log in to the API:**  \nTo begin you will need to obtain an access token to allow you to reach all other API endpoints. Supply your unique Login ID and API Key to the login endpoint. On success, an access token will be granted.\n\n**2\\. Get your account details:**  \nNext you should retrieve all your accounts associated with your API user so when you move into creating payments they are done under the relevant account, most endpoints will also require an Account ID.\n\n**3\\. Check recipient field requirements:**  \nNext you may want to set up some recipients to send payments to, you can use our get recipient requirements endpoint to understand what information you must provide for a recipient for a given country/currency combination. For this example, we want to know what the requirements are for a recipient in the UK and a GBP account.\n\n**4\\. Create a recipient:**  \nNow you have the required information for creating a recipient you can perform this action using our create recipient endpoint, we will also validate the details provided to avoid any delays in processing of payments.\n\n**5\\. Create a payment:**  \nOnce the recipient has been created you can now create a payment for it using the returned recipient ID and passing it into the create payment endpoint.\n\n**6\\. Check your balance:**  \nPayments will only be released once there is sufficient funds available on your account balance, you can do this by paying directly into your Moneycorp account. You can pay into your Moneycorp account using your account reference found on the get account endpoint. Then you can use the get balances endpoint to check your account balance.\n\n**7\\. Check your Payment's status:**  \nFollowing a successful payment creation, updates on the status of the payment can be returned from the get payment endpoint.\n\n# Idempotency\n\nMoneycorp APIs support idempotency for resource creation endpoints to prevent the accidental creation of duplicate resources.\n\nWhen creating a resource, include an Idempotency-Key header with the request. If a network interruption, timeout, or other transient failure occurs, the request can be safely retried using the same idempotency key without the risk of creating the resource more than once.\n\nTo perform an idempotent request, include an Idempotency-Key header: `Idempotency-Key: <key>`\n\nAn idempotency key is a unique value generated by the client that identifies a single logical request. The Idempotency-Key must be a UUID/GUID and must be unique per logical request.\n\n*Note: GET requests are inherently idempotent and should not include an Idempotency-Key header*\n\n## V3 Endpoints\n\nThe V3 idempotency model introduces enhanced retry and recovery capabilities while continuing to protect against duplicate resource creation. Where available, It is recommended to use V3 endpoints to benefit from these enhanced capabilities.\n\n1\\. Idempotency keys do not expire.\n\n2\\. An idempotency key permanently identifies a single logical request.\n\n3\\. An idempotency key must never be reused for a different logical request.\n\nWhen a request is retried using an existing idempotency key:\n\n- Original request is still being processed: `202 Accepted` with a `Retry-After head`.\nThe request remains in progress and should be retried after the specified interval.\n    \n- Original request completed successfully: `200 OK` with the original successful response.\nThe original successful response is returned. No duplicate resource is created.\n    \n- Original request was unsuccessful: Request accepted for processing.\nThe retried request is processed.\n    \n- Original request payload does not match the current request payload: `409 Conflict` with a Location header.\nThe request is rejected. The Location header identifies the resource associated with the original request, e.g., `/accounts/{accountId}/payments/{paymentId}`.\n\n## V1 and V2 Behaviour\n\nFor V1 and V2 endpoints:\n\n1\\. Idempotency keys expire after 72 hours.\n\n2\\. Requests submitted using an expired key are treated as new requests.\n\nWhen a request is retried using an existing idempotency key:\n\n- Original request is still being processed: `409 Conflict`.\nThe request is rejected.\n    \n- Original request completed successfully: `409 Conflict`\nThe request is rejected.\n    \n- Original request was unsuccessful: Request accepted for processing.\nThe retried request is processed.\n    \n\n**GET** requests are intrinsically Idempotent, so providing the Idempotency-Key header is not necessary.\n\n# Support\n\nContact your Moneycorp representative for further assistance.\n\n**Important Notice:**  \nThe API sandbox is a test environment that will mimic the characteristics of the production environment. In the test environment, you represent and warrant not to use real data (including personal data and account numbers) under any circumstances.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "45412734"
 	},
@@ -1111,7 +1111,7 @@
 					"response": []
 				},
 				{
-					"name": "Create a payment",
+					"name": "Create a payment V3",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -1160,7 +1160,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will create an individual payment. In order to create a payment you must first have created a recipient using the Create recipient endpoint and then include the recipient Id in the create payment request body."
+						"description": "Creates an individual payment.\n\nBefore creating a payment, you must first create a recipient using the Create Recipient endpoint. The recipient identifier must then be included in the Create Payment request.\n\nPayments may be submitted at any time. A newly created payment enters the Created state and will be released for execution only when the following conditions have been satisfied:\n    \n- Sufficient available balance on the account;\n    \n- Applicable business conditions have been met; and\n    \n- The specified payment date has been reached.\n\nThis endpoint supports the V3 idempotency model. To use the V3 endpoint, the Accept header must be set to: Accept: application/json;v3"
 					},
 					"response": []
 				},
@@ -2642,7 +2642,7 @@
 					"response": []
 				},
 				{
-					"name": "Create a spot exchange",
+					"name": "Create a spot exchange V3",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -2692,7 +2692,7 @@
 								}
 							]
 						},
-						"description": "This endpoint will return an individual payment associated to a specified Account ID and its related recipient details. Requires you to know the Payment ID."
+						"description": "This endpoint will create an exchange from the quote details previously generated.\n\nThis endpoint supports the V3 idempotency model. To use the V3 endpoint, the Accept header must be set to: Accept: application/json;v3"
 					},
 					"response": []
 				},
@@ -4133,6 +4133,41 @@
 							]
 						},
 						"description": "This endpoint will return the associated receiving accounts for the specified account ID and currency."
+					},
+					"response": []
+				},
+				{
+					"name": "Get all available notification types",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json, application/vnd.api+json"
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/references/notifications/eventTypes",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"references",
+								"notifications",
+								"eventTypes"
+							]
+						},
+						"description": "This endpoint returns the full list of supported webhook event types, along with their sample payloads. Integrators may use this to understand the structure of webhook notifications sent by Moneycorp."
 					},
 					"response": []
 				}
